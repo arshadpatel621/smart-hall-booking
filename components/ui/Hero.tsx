@@ -2,13 +2,9 @@ import { ImageBackground, Pressable, StyleSheet, Text, View, TextInput, Platform
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
-  withRepeat, 
-  withTiming, 
   FadeIn,
   FadeInDown,
-  withSpring
 } from "react-native-reanimated";
-import { useEffect } from "react";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 
 type HeroProps = {
@@ -24,17 +20,10 @@ type HeroProps = {
 export function Hero({
   title,
   subtitle,
-  primaryLabel,
-  secondaryLabel,
   onPrimaryPress,
-  onSecondaryPress,
   backgroundImage,
 }: HeroProps) {
   const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
 
   return (
     <Animated.View entering={FadeIn.duration(1200)} style={styles.hero}>
@@ -46,7 +35,10 @@ export function Hero({
         <View style={styles.overlay}>
           <View style={styles.content}>
             <Animated.View entering={FadeInDown.delay(400).springify()}>
-              <Text style={styles.pill}>India's Most Trusted Venue Partner</Text>
+              <View style={styles.pillContainer}>
+                <View style={styles.dot} />
+                <Text style={styles.pillText}>India's No. 1 Venue Platform</Text>
+              </View>
             </Animated.View>
             
             <Animated.View entering={FadeInDown.delay(600).springify()}>
@@ -57,7 +49,7 @@ export function Hero({
               <Text style={styles.subtitle}>{subtitle}</Text>
             </Animated.View>
 
-            {/* Frosted Search Bar Simulation */}
+            {/* Premium Search Bar */}
             <Animated.View 
               entering={FadeInDown.delay(1000).springify()}
               style={styles.searchContainer}
@@ -71,13 +63,13 @@ export function Hero({
                 />
               </View>
               <Pressable style={styles.searchButton} onPress={onPrimaryPress}>
-                <Text style={styles.searchButtonText}>Explore</Text>
+                <Text style={styles.searchButtonText}>Search</Text>
               </Pressable>
             </Animated.View>
 
             <View style={styles.quickLinks}>
-              <Text style={styles.quickLinkLabel}>Popular:</Text>
-              {['Banquets', 'Farmhouses', 'Hotels'].map((label, i) => (
+              <Text style={styles.quickLinkLabel}>Trending:</Text>
+              {['Rooftop', 'Poolside', 'Grand Hall'].map((label, i) => (
                 <Pressable key={i} style={styles.quickLinkPill}>
                   <Text style={styles.quickLinkText}>{label}</Text>
                 </Pressable>
@@ -97,19 +89,19 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: "#F8FAFC",
     ...Platform.select({
-      web: { height: 500 },
-      default: { height: 550 }
+      web: { height: 480 },
+      default: { height: 520 }
     })
   },
   image: {
     flex: 1,
   },
   imageStyle: {
-    opacity: 0.9,
+    opacity: 1,
   },
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(30, 41, 59, 0.4)",
+    backgroundColor: "rgba(15, 23, 42, 0.45)",
     justifyContent: "center",
     padding: 24,
   },
@@ -118,49 +110,61 @@ const styles = StyleSheet.create({
     maxWidth: 800,
     alignSelf: "center",
   },
-  pill: {
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
-    color: "#FFFFFF",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+  pillContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 99,
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
     marginBottom: 20,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.3)",
   },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981', // Green dot for "Active/Trusted"
+    marginRight: 8,
+  },
+  pillText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "800",
+    textTransform: "uppercase",
+    letterSpacing: 1.2,
+  },
   title: {
     color: "#FFFFFF",
-    fontSize: 40,
+    fontSize: 42,
     fontWeight: "900",
     textAlign: "center",
-    lineHeight: 48,
-    letterSpacing: -1,
+    lineHeight: 50,
+    letterSpacing: -1.5,
   },
   subtitle: {
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "rgba(255, 255, 255, 0.95)",
     fontSize: 16,
     textAlign: "center",
-    marginTop: 12,
+    marginTop: 14,
     lineHeight: 24,
     fontWeight: "500",
+    maxWidth: '90%',
   },
   searchContainer: {
     flexDirection: "row",
     backgroundColor: "#FFFFFF",
-    padding: 8,
-    borderRadius: 20,
-    marginTop: 32,
+    padding: 6,
+    borderRadius: 24,
+    marginTop: 36,
     width: "100%",
-    maxWidth: 500,
+    maxWidth: 520,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 24,
+    elevation: 12,
   },
   searchInputWrapper: {
     flex: 1,
@@ -172,39 +176,49 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     fontSize: 16,
-    color: "#1E293B",
+    color: "#0F172A",
+    ...Platform.select({
+      web: { outlineStyle: 'none' }
+    })
   },
   searchButton: {
     backgroundColor: "#E11D48",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 18,
+    shadowColor: "#E11D48",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
   },
   searchButtonText: {
     color: "#FFFFFF",
-    fontWeight: "800",
-    fontSize: 15,
+    fontWeight: "900",
+    fontSize: 14,
+    letterSpacing: 0.5,
   },
   quickLinks: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 20,
-    gap: 10,
+    marginTop: 24,
+    gap: 12,
   },
   quickLinkLabel: {
-    color: "#FFFFFF",
+    color: "rgba(255, 255, 255, 0.8)",
     fontSize: 13,
     fontWeight: "600",
   },
   quickLinkPill: {
     backgroundColor: "rgba(255, 255, 255, 0.15)",
-    paddingVertical: 4,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
     borderRadius: 99,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   quickLinkText: {
     color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 });

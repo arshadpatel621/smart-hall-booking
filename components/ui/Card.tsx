@@ -1,6 +1,12 @@
 import { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, Platform, Image } from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import { Pressable, StyleSheet, Text, View, Platform } from "react-native";
+import { Image } from "expo-image";
+import Animated, { 
+  FadeInDown, 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withSpring 
+} from "react-native-reanimated";
 
 type CardProps = {
   title: string;
@@ -14,6 +20,8 @@ type CardProps = {
   imageUrl?: string;
 };
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function Card({
   title,
   subtitle,
@@ -25,18 +33,39 @@ export function Card({
   index = 0,
   imageUrl,
 }: CardProps) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const onPressIn = () => {
+    scale.value = withSpring(0.98);
+  };
+
+  const onPressOut = () => {
+    scale.value = withSpring(1);
+  };
+
   return (
-    <Animated.View 
+    <AnimatedPressable 
       entering={FadeInDown.delay(index * 100).springify().damping(18)}
-      style={styles.card}
+      style={[styles.card, animatedStyle]}
+      onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
     >
       <View style={styles.imageContainer}>
         <Image 
           source={{ uri: imageUrl ?? "https://images.unsplash.com/photo-1519162584292-56dfc9eb5db4" }} 
           style={styles.cardImage}
+          contentFit="cover"
+          transition={500}
         />
         <View style={styles.imageOverlay}>
-          <Text style={styles.metaBadge}>{meta.split('•')[0]}</Text>
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{meta.split('•')[0].trim()}</Text>
+          </View>
         </View>
       </View>
 
@@ -46,9 +75,11 @@ export function Card({
             <Text style={styles.title} numberOfLines={1}>
               {title}
             </Text>
-            <Text style={styles.subtitle} numberOfLines={1}>
-              {subtitle}
-            </Text>
+            <View style={styles.locationWrapper}>
+              <Text style={styles.subtitle} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            </View>
           </View>
           {rightValue && (
             <View style={styles.priceContainer}>
@@ -57,28 +88,27 @@ export function Card({
           )}
         </View>
 
+        <View style={styles.divider} />
+
         <View style={styles.content}>{children}</View>
 
         {ctaLabel && (
-          <Pressable
-            style={({ pressed }) => [
-              styles.button,
-              pressed && styles.buttonPressed,
-            ]}
-            onPress={onPress}
-          >
-            <Text style={styles.buttonText}>{ctaLabel}</Text>
-          </Pressable>
+          <View style={styles.footer}>
+            <Text style={styles.ctaText}>{ctaLabel}</Text>
+            <View style={styles.arrowIcon}>
+               {/* Arrow icon can be added here or just leave text for minimalist look */}
+            </View>
+          </View>
         )}
       </View>
-    </Animated.View>
+    </AnimatedPressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 28,
+    borderRadius: 24,
     marginBottom: 20,
     overflow: "hidden",
     borderWidth: 1,
@@ -86,20 +116,20 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 12 },
+        shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.1,
-        shadowRadius: 16,
+        shadowRadius: 12,
       },
       android: {
-        elevation: 10,
+        elevation: 6,
       },
       web: {
-        boxShadow: "0 10px 30px rgba(0, 0, 0, 0.06)",
+        boxShadow: "0 8px 24px rgba(0, 0, 0, 0.04)",
       },
     }),
   },
   imageContainer: {
-    height: 180,
+    height: 200,
     width: "100%",
   },
   cardImage: {
@@ -108,19 +138,23 @@ const styles = StyleSheet.create({
   },
   imageOverlay: {
     position: "absolute",
-    top: 16,
+    bottom: 16,
     left: 16,
   },
-  metaBadge: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    paddingVertical: 4,
+  badge: {
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 99,
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#E11D48",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#0F172A",
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   body: {
     padding: 20,
@@ -128,55 +162,64 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
+    alignItems: "center",
+    marginBottom: 16,
   },
   headerTitle: {
     flex: 1,
+    marginRight: 12,
   },
   title: {
-    color: "#1E293B",
-    fontSize: 20,
-    fontWeight: "800",
+    color: "#0F172A",
+    fontSize: 22,
+    fontWeight: "900",
     letterSpacing: -0.5,
   },
   subtitle: {
     color: "#64748B",
-    fontSize: 13,
-    fontWeight: "500",
-    marginTop: 2,
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 4,
+  },
+  locationWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   priceContainer: {
     backgroundColor: "#FFF1F2",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 14,
   },
   priceLabel: {
     color: "#E11D48",
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 18,
+    fontWeight: "900",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: "#F1F5F9",
+    marginBottom: 16,
   },
   content: {
     gap: 8,
   },
-  button: {
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 12,
-    borderRadius: 16,
-    alignItems: "center",
-    marginTop: 16,
-    borderWidth: 1.5,
-    borderColor: "#E11D48",
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F8FAFC',
   },
-  buttonPressed: {
-    backgroundColor: "#FFF1F2",
-    transform: [{ scale: 0.98 }],
-  },
-  buttonText: {
+  ctaText: {
     color: "#E11D48",
     fontSize: 15,
     fontWeight: "800",
     letterSpacing: 0.3,
   },
+  arrowIcon: {
+    // Styling for arrow icon
+  }
 });
